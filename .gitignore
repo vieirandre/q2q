@@ -1,0 +1,9 @@
+.vs/
+*.user
+*.suo
+*.sln.ide
+*.sln.docstates
+bin/
+obj/
+**/bin/
+**/obj/

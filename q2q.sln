@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35707.178 d17.12
+VisualStudioVersion = 17.12.35707.178
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "q2q", "q2q\q2q.csproj", "{7AFDFFEE-1D27-4493-9858-3FE091B36BF6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "q2q", "q2q\src\q2q.csproj", "{7AFDFFEE-1D27-4493-9858-3FE091B36BF6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{DDABEFB5-4FC7-45A5-ADFF-537F319C96B1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{72005251-3097-4E8A-80E2-FBA9E80B31A5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +22,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7AFDFFEE-1D27-4493-9858-3FE091B36BF6} = {DDABEFB5-4FC7-45A5-ADFF-537F319C96B1}
 	EndGlobalSection
 EndGlobal

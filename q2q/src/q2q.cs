@@ -11,7 +11,7 @@ public class q2q : Iq2q
         _sqsClient = new AmazonSQSClient();
     }
 
-    public Task ForwardMessages(string sourceQueueUrl, string destinationQueueUrl)
+    public Task ForwardMessages(string sourceQueueUrl, string destinationQueueUrl, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }

@@ -41,8 +41,6 @@ public class q2q(IAmazonSQS? sqsClient = null, q2qOptions? options = null) : Iq2
                 if (_sourceQueueMessageIds.Contains(message.MessageId))
                     continue;
 
-                _sourceQueueMessageIds.Add(message.MessageId);
-
                 var sendRequest = new SendMessageRequest
                 {
                     QueueUrl = destinationQueueUrl,
@@ -53,6 +51,7 @@ public class q2q(IAmazonSQS? sqsClient = null, q2qOptions? options = null) : Iq2
                 try
                 {
                     var sendResponse = await _sqsClient.SendMessageAsync(sendRequest, cancellationToken);
+                    _sourceQueueMessageIds.Add(message.MessageId);
                 }
                 catch (Exception ex)
                 {

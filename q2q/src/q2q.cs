@@ -36,10 +36,11 @@ public class q2q(IAmazonSQS? sqsClient = null, q2qOptions? options = null) : Iq2
                 break;
             }
 
-            receiveResponse.Messages.RemoveAll(msg => _sourceQueueMessageIds.Contains(msg.MessageId));
-
             foreach (var message in receiveResponse.Messages)
             {
+                if (_sourceQueueMessageIds.Contains(message.MessageId))
+                    continue;
+
                 _sourceQueueMessageIds.Add(message.MessageId);
 
                 var sendRequest = new SendMessageRequest

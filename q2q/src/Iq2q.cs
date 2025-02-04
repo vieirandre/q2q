@@ -2,5 +2,5 @@
 
 public interface Iq2q
 {
-    Task ForwardMessages(string sourceQueueUrl, string destinationQueueUrl, CancellationToken cancellationToken);
+    Task ForwardMessages(string sourceQueueUrl, string destinationQueueUrl, CancellationToken cancellationToken = default);
 }

@@ -22,6 +22,7 @@ public class q2q : Iq2q
             {
                 QueueUrl = sourceQueueUrl,
                 MaxNumberOfMessages = 10, // into param
+                WaitTimeSeconds = 10, // into param
                 MessageSystemAttributeNames = ["All"],
                 MessageAttributeNames = ["All"]
             };

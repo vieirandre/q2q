@@ -26,30 +26,41 @@ public class q2q : Iq2q
                 MessageAttributeNames = ["All"]
             };
 
-            var receiveResponse = await _sqsClient.ReceiveMessageAsync(receiveRequest, cancellationToken);
+            ReceiveMessageResponse receiveResponse;
+
+            try
+            {
+                receiveResponse = await _sqsClient.ReceiveMessageAsync(receiveRequest, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error retrieving messages from source queue: {ex.Message}");
+                break;
+            }
 
             receiveResponse.Messages.RemoveAll(msg => _sourceQueueMessageIds.Contains(msg.MessageId));
 
             foreach (var message in receiveResponse.Messages)
             {
+                _sourceQueueMessageIds.Add(message.MessageId);
+
+                var sendRequest = new SendMessageRequest
+                {
+                    QueueUrl = destinationQueueUrl,
+                    MessageBody = message.Body,
+                    MessageAttributes = message.MessageAttributes
+                };
+
                 try
                 {
-                    _sourceQueueMessageIds.Add(message.MessageId);
-
-                    var sendRequest = new SendMessageRequest
-                    {
-                        QueueUrl = destinationQueueUrl,
-                        MessageBody = message.Body,
-                        MessageAttributes = message.MessageAttributes
-                    };
-
                     var sendResponse = await _sqsClient.SendMessageAsync(sendRequest, cancellationToken);
                 }
                 catch (Exception ex)
                 {
-                    // log
+                    Console.Error.WriteLine($"Error forwarding message id {message.MessageId}: {ex.Message}");
+                    continue;
                 }
             }
         }
-    } 
+    }
 }

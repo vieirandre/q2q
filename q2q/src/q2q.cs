@@ -1,4 +1,5 @@
 ﻿using Amazon.SQS;
+using Amazon.SQS.Model;
 
 namespace q2q;
 
@@ -11,8 +12,19 @@ public class q2q : Iq2q
         _sqsClient = new AmazonSQSClient();
     }
 
-    public Task ForwardMessages(string sourceQueueUrl, string destinationQueueUrl, CancellationToken cancellationToken)
+    public async Task ForwardMessages(string sourceQueueUrl, string destinationQueueUrl, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
-    }
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            var receiveRequest = new ReceiveMessageRequest
+            {
+                QueueUrl = sourceQueueUrl,
+                MaxNumberOfMessages = 10, // into param
+                MessageSystemAttributeNames = ["All"],
+                MessageAttributeNames = ["All"]
+            };
+
+            var receiveResponse = await _sqsClient.ReceiveMessageAsync(receiveRequest, cancellationToken);
+        }
+    } 
 }

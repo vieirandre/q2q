@@ -4,20 +4,12 @@ using q2q.Models;
 
 namespace q2q;
 
-public class q2q : Iq2q
+public class q2q(IAmazonSQS? sqsClient = null, q2qOptions? options = null) : Iq2q
 {
-    private readonly IAmazonSQS _sqsClient;
-    private readonly q2qOptions _q2qOptions;
+    private readonly IAmazonSQS _sqsClient = sqsClient ?? new AmazonSQSClient();
+    private readonly q2qOptions _q2qOptions = options ?? new q2qOptions();
 
-    private readonly HashSet<string> _sourceQueueMessageIds;
-
-    public q2q(IAmazonSQS? sqsClient = null, q2qOptions? options = null)
-    {
-        _sqsClient = sqsClient ?? new AmazonSQSClient();
-        _q2qOptions = options ?? new q2qOptions();
-
-        _sourceQueueMessageIds = [];
-    }
+    private readonly HashSet<string> _sourceQueueMessageIds = [];
 
     public async Task ForwardMessages(string sourceQueueUrl, string destinationQueueUrl, CancellationToken cancellationToken = default)
     {

@@ -1,16 +1,21 @@
 ﻿using Amazon.SQS;
 using Amazon.SQS.Model;
+using q2q.Models;
 
 namespace q2q;
 
 public class q2q : Iq2q
 {
     private readonly IAmazonSQS _sqsClient;
+    private readonly q2qOptions _q2qOptions;
+
     private readonly HashSet<string> _sourceQueueMessageIds;
 
-    public q2q(IAmazonSQS? sqsClient = null)
+    public q2q(IAmazonSQS? sqsClient = null, q2qOptions? options = null)
     {
         _sqsClient = sqsClient ?? new AmazonSQSClient();
+        _q2qOptions = options ?? new q2qOptions();
+
         _sourceQueueMessageIds = [];
     }
 
@@ -21,8 +26,8 @@ public class q2q : Iq2q
             var receiveRequest = new ReceiveMessageRequest
             {
                 QueueUrl = sourceQueueUrl,
-                MaxNumberOfMessages = 10, // into param
-                WaitTimeSeconds = 10, // into param
+                MaxNumberOfMessages = _q2qOptions.MaxNumberOfMessages,
+                WaitTimeSeconds = _q2qOptions.WaitTimeSeconds,
                 MessageSystemAttributeNames = ["All"],
                 MessageAttributeNames = ["All"]
             };

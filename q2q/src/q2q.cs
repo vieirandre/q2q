@@ -28,6 +28,25 @@ public class q2q : Iq2q
 
             if (receiveResponse.Messages.Count == 0)
                 continue;
+
+            foreach (var message in receiveResponse.Messages)
+            {
+                try
+                {
+                    var sendRequest = new SendMessageRequest
+                    {
+                        QueueUrl = destinationQueueUrl,
+                        MessageBody = message.Body,
+                        MessageAttributes = message.MessageAttributes
+                    };
+
+                    var sendResponse = await _sqsClient.SendMessageAsync(sendRequest, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    // log
+                }
+            }
         }
     } 
 }

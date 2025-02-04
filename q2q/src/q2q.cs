@@ -8,9 +8,9 @@ public class q2q : Iq2q
     private readonly IAmazonSQS _sqsClient;
     private readonly HashSet<string> _sourceQueueMessageIds;
 
-    public q2q()
+    public q2q(IAmazonSQS? sqsClient = null)
     {
-        _sqsClient = new AmazonSQSClient();
+        _sqsClient = sqsClient ?? new AmazonSQSClient();
         _sourceQueueMessageIds = [];
     }
 

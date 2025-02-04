@@ -25,6 +25,9 @@ public class q2q : Iq2q
             };
 
             var receiveResponse = await _sqsClient.ReceiveMessageAsync(receiveRequest, cancellationToken);
+
+            if (receiveResponse.Messages.Count == 0)
+                continue;
         }
     } 
 }

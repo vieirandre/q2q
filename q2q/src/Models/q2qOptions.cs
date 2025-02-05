@@ -1,7 +1,21 @@
-﻿namespace q2q.Models;
+﻿using q2q.Helpers;
+
+namespace q2q.Models;
 
 public class q2qOptions
 {
-    public int MaxNumberOfMessages { get; set; } = 10;
-    public int WaitTimeSeconds { get; set; } = 10;
+    private int _maxNumberOfMessages = 10;
+    private int _waitTimeSeconds = 10;
+
+    public int MaxNumberOfMessages
+    {
+        get => _maxNumberOfMessages;
+        set => _maxNumberOfMessages = Guards.EnsureInRange(value, nameof(MaxNumberOfMessages), 1, 10);
+    }
+
+    public int WaitTimeSeconds
+    {
+        get => _waitTimeSeconds;
+        set => _waitTimeSeconds = Guards.EnsureInRange(value, nameof(WaitTimeSeconds), 0, 20);
+    }
 }

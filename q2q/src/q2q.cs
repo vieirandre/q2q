@@ -18,7 +18,10 @@ public class q2q(IAmazonSQS? sqsClient = null, q2qOptions? options = null) : Iq2
             var messages = await ReceiveMessages(sourceQueueUrl, cancellationToken);
 
             if (!messages.Any())
+            {
+                await Task.Delay(1000, cancellationToken);
                 continue;
+            }
 
             foreach (var message in messages)
             {

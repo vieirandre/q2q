@@ -19,7 +19,7 @@ public class q2q(IAmazonSQS? sqsClient = null, q2qOptions? options = null) : Iq2
 
             if (!messages.Any())
             {
-                await Task.Delay(1000, cancellationToken);
+                await Task.Delay(_options.PollingDelayMilliseconds, cancellationToken);
                 continue;
             }
 

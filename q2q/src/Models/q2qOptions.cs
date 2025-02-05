@@ -18,4 +18,6 @@ public class q2qOptions
         get => _waitTimeSeconds;
         set => _waitTimeSeconds = Guards.EnsureInRange(value, nameof(WaitTimeSeconds), 0, 20);
     }
+
+    public int PollingDelayMilliseconds { get; set; } = 1000;
 }

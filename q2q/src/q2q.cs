@@ -15,50 +15,63 @@ public class q2q(IAmazonSQS? sqsClient = null, q2qOptions? options = null) : Iq2
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            var receiveRequest = new ReceiveMessageRequest
-            {
-                QueueUrl = sourceQueueUrl,
-                MaxNumberOfMessages = _options.MaxNumberOfMessages,
-                WaitTimeSeconds = _options.WaitTimeSeconds,
-                MessageSystemAttributeNames = ["All"],
-                MessageAttributeNames = ["All"]
-            };
+            var messages = await ReceiveMessages(sourceQueueUrl, cancellationToken);
 
-            ReceiveMessageResponse receiveResponse;
+            if (!messages.Any())
+                continue;
 
-            try
-            {
-                receiveResponse = await _sqsClient.ReceiveMessageAsync(receiveRequest, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error retrieving messages from source queue: {ex.Message}");
-                break;
-            }
-
-            foreach (var message in receiveResponse.Messages)
+            foreach (var message in messages)
             {
                 if (_sourceQueueMessageIds.Contains(message.MessageId))
                     continue;
 
-                var sendRequest = new SendMessageRequest
-                {
-                    QueueUrl = destinationQueueUrl,
-                    MessageBody = message.Body,
-                    MessageAttributes = message.MessageAttributes
-                };
-
-                try
-                {
-                    var sendResponse = await _sqsClient.SendMessageAsync(sendRequest, cancellationToken);
+                if (await ForwardMessage(message, destinationQueueUrl, cancellationToken))
                     _sourceQueueMessageIds.Add(message.MessageId);
-                }
-                catch (Exception ex)
-                {
-                    Console.Error.WriteLine($"Error forwarding message id {message.MessageId}: {ex.Message}");
-                    continue;
-                }
             }
+        }
+    }
+
+    private async Task<IEnumerable<Message>> ReceiveMessages(string sourceQueueUrl, CancellationToken cancellationToken)
+    {
+        var receiveRequest = new ReceiveMessageRequest
+        {
+            QueueUrl = sourceQueueUrl,
+            MaxNumberOfMessages = _options.MaxNumberOfMessages,
+            WaitTimeSeconds = _options.WaitTimeSeconds,
+            MessageSystemAttributeNames = ["All"],
+            MessageAttributeNames = ["All"]
+        };
+
+        try
+        {
+            var response = await _sqsClient.ReceiveMessageAsync(receiveRequest, cancellationToken);
+            return response.Messages;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error retrieving messages from source queue: {ex.Message}");
+            return [];
+        }
+    }
+
+    private async Task<bool> ForwardMessage(Message message, string destinationQueueUrl, CancellationToken cancellationToken)
+    {
+        var sendRequest = new SendMessageRequest
+        {
+            QueueUrl = destinationQueueUrl,
+            MessageBody = message.Body,
+            MessageAttributes = message.MessageAttributes
+        };
+
+        try
+        {
+            await _sqsClient.SendMessageAsync(sendRequest, cancellationToken);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error forwarding message id {message.MessageId}: {ex.Message}");
+            return false;
         }
     }
 }

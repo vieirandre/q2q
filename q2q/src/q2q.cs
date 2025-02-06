@@ -28,7 +28,7 @@ public class q2q(IAmazonSQS? sqsClient = null, q2qOptions? options = null) : Iq2
                 if (_sourceQueueMessageIds.Contains(message.MessageId))
                     continue;
 
-                if (await ForwardMessage(message, destinationQueueUrl, cancellationToken))
+                if (await SendMessage(message, destinationQueueUrl, cancellationToken))
                     _sourceQueueMessageIds.Add(message.MessageId);
             }
         }
@@ -57,7 +57,7 @@ public class q2q(IAmazonSQS? sqsClient = null, q2qOptions? options = null) : Iq2
         }
     }
 
-    private async Task<bool> ForwardMessage(Message message, string destinationQueueUrl, CancellationToken cancellationToken)
+    private async Task<bool> SendMessage(Message message, string destinationQueueUrl, CancellationToken cancellationToken)
     {
         var sendRequest = new SendMessageRequest
         {

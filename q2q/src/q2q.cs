@@ -11,7 +11,7 @@ public class q2q(IAmazonSQS? sqsClient = null, q2qOptions? options = null) : Iq2
 
     private readonly HashSet<string> _sourceQueueMessageIds = [];
 
-    public async Task ForwardMessages(string sourceQueueUrl, string destinationQueueUrl, CancellationToken cancellationToken = default)
+    public async Task ForwardMessages(string sourceQueueUrl, string destinationQueueUrl, CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
         {

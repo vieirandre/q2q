@@ -16,21 +16,15 @@ public class q2q(IAmazonSQS? sqsClient = null, q2qOptions? options = null) : Iq2
         while (!cancellationToken.IsCancellationRequested)
         {
             var messages = await ReceiveMessages(sourceQueueUrl, cancellationToken);
+            var newMessages = messages.Where(m => !_sourceQueueMessageIds.Contains(m.MessageId)).ToList();
 
-            if (!messages.Any())
+            if (newMessages.Count == 0)
             {
                 await Task.Delay(_options.PollingDelayMilliseconds, cancellationToken);
                 continue;
             }
 
-            foreach (var message in messages)
-            {
-                if (_sourceQueueMessageIds.Contains(message.MessageId))
-                    continue;
-
-                if (await SendMessage(message, destinationQueueUrl, cancellationToken))
-                    _sourceQueueMessageIds.Add(message.MessageId);
-            }
+            await SendMessageBatches(newMessages, destinationQueueUrl, cancellationToken);
         }
     }
 
@@ -57,24 +51,43 @@ public class q2q(IAmazonSQS? sqsClient = null, q2qOptions? options = null) : Iq2
         }
     }
 
-    private async Task<bool> SendMessage(Message message, string destinationQueueUrl, CancellationToken cancellationToken)
+    private async Task SendMessageBatches(IEnumerable<Message> messages, string destinationQueueUrl, CancellationToken cancellationToken)
     {
-        var sendRequest = new SendMessageRequest
-        {
-            QueueUrl = destinationQueueUrl,
-            MessageBody = message.Body,
-            MessageAttributes = message.MessageAttributes
-        };
+        var batches = messages
+            .Select((message, index) => new { message, index })
+            .GroupBy(x => x.index / 10, x => x.message);
 
-        try
+        foreach (var batch in batches)
         {
-            await _sqsClient.SendMessageAsync(sendRequest, cancellationToken);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Error forwarding message id {message.MessageId}: {ex.Message}");
-            return false;
+            var batchEntries = batch.Select(message => new SendMessageBatchRequestEntry
+            {
+                Id = message.MessageId, // !
+                MessageBody = message.Body,
+                MessageAttributes = message.MessageAttributes
+            });
+
+            var batchRequest = new SendMessageBatchRequest
+            {
+                QueueUrl = destinationQueueUrl,
+                Entries = batchEntries.ToList()
+            };
+
+            try
+            {
+                var response = await _sqsClient.SendMessageBatchAsync(batchRequest, cancellationToken);
+
+                response
+                    .Failed
+                    .ForEach(failed => Console.Error.WriteLine($"Failed to send message w/ id {failed.Id}: {failed.Message}"));
+
+                response
+                    .Successful
+                    .ForEach(successful => _sourceQueueMessageIds.Add(successful.Id));
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error sending message batch: {ex.Message}");
+            }
         }
     }
 }

@@ -6,6 +6,7 @@ public class q2qOptions
 {
     private int _maxNumberOfMessages = 10;
     private int _waitTimeSeconds = 10;
+    private int _batchSize = 10;
 
     public int MaxNumberOfMessages
     {
@@ -23,7 +24,7 @@ public class q2qOptions
 
     public int BatchSize
     {
-        get => _maxNumberOfMessages;
-        set => _maxNumberOfMessages = Guards.EnsureInRange(value, nameof(BatchSize), 1, 10);
+        get => _batchSize;
+        set => _batchSize = Guards.EnsureInRange(value, nameof(BatchSize), 1, 10);
     }
 }

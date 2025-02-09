@@ -24,6 +24,6 @@ public class q2qOptions
     public int BatchSize
     {
         get => _maxNumberOfMessages;
-        set => _maxNumberOfMessages = Guards.EnsureInRange(value, nameof(MaxNumberOfMessages), 1, 10);
+        set => _maxNumberOfMessages = Guards.EnsureInRange(value, nameof(BatchSize), 1, 10);
     }
 }

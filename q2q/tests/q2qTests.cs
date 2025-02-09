@@ -7,71 +7,87 @@ namespace q2q.Tests;
 
 public class q2qTests
 {
-    [Fact]
-    public async Task Test1()
+    private readonly Mock<IAmazonSQS> _sqsClientMock;
+    private readonly Mock<q2qOptions> _options;
+
+    public q2qTests()
     {
-        string sourceUrl = "//";
-        string destUrl = "/";
-
-        var x = new q2q();
-
-        await x.ForwardMessages(sourceUrl, destUrl, default);
+        _sqsClientMock = new Mock<IAmazonSQS>();
+        _options = new Mock<q2qOptions>();
     }
 
+    //[Fact]
+    //public async Task Test1()
+    //{
+    //    string sourceUrl = "//";
+    //    string destUrl = "/";
+
+    //    var x = new q2q();
+
+    //    await x.ForwardMessages(sourceUrl, destUrl, default);
+    //}
+
     [Fact]
-    public async Task ForwardMessages_ProcessesMessage()
+    public async Task ForwardMessages_ForwardsNewMessages()
     {
         // arrange
 
         string sourceQueueUrl = "https://sqs-1";
         string destinationQueueUrl = "https://sqs-2";
 
-        var message = new Message
+        var testMessage = new Message
         {
             MessageId = "msg-1",
             Body = "Test msg",
             MessageAttributes = []
         };
 
-        var receiveResponseWithMessage = new ReceiveMessageResponse
-        {
-            Messages = [message]
-        };
-
-        var emptyReceiveResponse = new ReceiveMessageResponse
-        {
-            Messages = []
-        };
-
-        var mockSqsClient = new Mock<IAmazonSQS>();
-
-        mockSqsClient
-            .SetupSequence(client => client.ReceiveMessageAsync(
-                It.IsAny<ReceiveMessageRequest>(), 
+        _sqsClientMock.SetupSequence(sqs => sqs.ReceiveMessageAsync(
+                It.IsAny<ReceiveMessageRequest>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(receiveResponseWithMessage)
-            .ReturnsAsync(emptyReceiveResponse);
+            .ReturnsAsync(new ReceiveMessageResponse
+            {
+                Messages = [testMessage]
+            })
+            .ReturnsAsync(new ReceiveMessageResponse
+            {
+                Messages = []
+            });
 
-        mockSqsClient
-            .Setup(client => client.SendMessageAsync(
-                It.IsAny<SendMessageRequest>(), 
+        _sqsClientMock.Setup(sqs => sqs.SendMessageBatchAsync(
+                It.IsAny<SendMessageBatchRequest>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new SendMessageResponse());
+            .ReturnsAsync((SendMessageBatchRequest request, CancellationToken token) =>
+            {
+                var response = new SendMessageBatchResponse();
 
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+                foreach (var entry in request.Entries)
+                {
+                    response.Successful.Add(new SendMessageBatchResultEntry
+                    {
+                        Id = entry.Id
+                    });
+                }
 
-        var q2q = new q2q(mockSqsClient.Object, new q2qOptions());
+                return response;
+            });
+
+        var q2q = new q2q(_sqsClientMock.Object, _options.Object);
+
+        using var cts = new CancellationTokenSource(200);
 
         // act
 
-        await q2q.ForwardMessages(sourceQueueUrl, destinationQueueUrl, cts.Token);
+        var forwardTask = q2q.ForwardMessages(sourceQueueUrl, destinationQueueUrl, cts.Token);
+        await Assert.ThrowsAsync<TaskCanceledException>(async () => await forwardTask);
 
         // assert
 
-        mockSqsClient
-            .Verify(client => client.SendMessageAsync(
-                It.Is<SendMessageRequest>(req => req.QueueUrl == destinationQueueUrl && req.MessageBody == message.Body), 
-                It.IsAny<CancellationToken>()), 
+        _sqsClientMock.Verify(sqs => sqs.SendMessageBatchAsync(
+                It.Is<SendMessageBatchRequest>(req =>
+                    req.QueueUrl == destinationQueueUrl &&
+                    req.Entries.Any(e => e.Id == testMessage.MessageId)),
+                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 }

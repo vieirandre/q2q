@@ -20,4 +20,10 @@ public class q2qOptions
     }
 
     public int PollingDelayMilliseconds { get; set; } = 1000;
+
+    public int BatchSize
+    {
+        get => _maxNumberOfMessages;
+        set => _maxNumberOfMessages = Guards.EnsureInRange(value, nameof(MaxNumberOfMessages), 1, 10);
+    }
 }

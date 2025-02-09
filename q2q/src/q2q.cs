@@ -55,7 +55,7 @@ public class q2q(IAmazonSQS? sqsClient = null, q2qOptions? options = null) : Iq2
     {
         var batches = messages
             .Select((message, index) => new { message, index })
-            .GroupBy(x => x.index / 10, x => x.message);
+            .GroupBy(x => x.index / _options.BatchSize, x => x.message);
 
         foreach (var batch in batches)
         {

@@ -28,7 +28,7 @@ public class q2qTests
     //}
 
     [Fact]
-    public async Task ForwardMessages_ForwardsNewMessages()
+    public async Task ForwardMessages_GivenSingleMessageInSourceQueue_ShouldForwardMessage()
     {
         // arrange
 

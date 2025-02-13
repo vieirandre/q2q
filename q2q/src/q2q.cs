@@ -4,7 +4,7 @@ using q2q.Models;
 
 namespace q2q;
 
-public class q2q(IAmazonSQS? sqsClient = null, q2qOptions? options = null) : Iq2q
+public class q2q(IAmazonSQS? sqsClient = null, q2qOptions? options = null)
 {
     private readonly IAmazonSQS _sqsClient = sqsClient ?? new AmazonSQSClient();
     private readonly q2qOptions _options = options ?? new q2qOptions();

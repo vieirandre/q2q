@@ -5,12 +5,12 @@ using q2q.Models;
 
 namespace q2q.Tests;
 
-public class q2qTests
+public class MessageRelayTests
 {
     private readonly Mock<IAmazonSQS> _sqsClientMock;
     private readonly Mock<q2qOptions> _options;
 
-    public q2qTests()
+    public MessageRelayTests()
     {
         _sqsClientMock = new Mock<IAmazonSQS>();
         _options = new Mock<q2qOptions>();
@@ -22,7 +22,7 @@ public class q2qTests
     //    string sourceUrl = "//";
     //    string destUrl = "/";
 
-    //    var x = new q2q();
+    //    var x = new MessageRelay();
 
     //    await x.ForwardMessages(sourceUrl, destUrl, default);
     //}
@@ -72,13 +72,13 @@ public class q2qTests
                 return response;
             });
 
-        var q2q = new q2q(_sqsClientMock.Object, _options.Object);
+        var relay = new MessageRelay(_sqsClientMock.Object, _options.Object);
 
         using var cts = new CancellationTokenSource(100);
 
         // act
 
-        var forwardTask = q2q.ForwardMessages(sourceQueueUrl, destinationQueueUrl, cts.Token);
+        var forwardTask = relay.ForwardMessages(sourceQueueUrl, destinationQueueUrl, cts.Token);
         await Assert.ThrowsAsync<TaskCanceledException>(async () => await forwardTask);
 
         // assert
@@ -140,13 +140,13 @@ public class q2qTests
                 return response;
             });
 
-        var q2q = new q2q(_sqsClientMock.Object, _options.Object);
+        var relay = new MessageRelay(_sqsClientMock.Object, _options.Object);
 
         using var cts = new CancellationTokenSource(100);
 
         // act
 
-        var forwardTask = q2q.ForwardMessages(sourceQueueUrl, destinationQueueUrl, cts.Token);
+        var forwardTask = relay.ForwardMessages(sourceQueueUrl, destinationQueueUrl, cts.Token);
         await Assert.ThrowsAsync<TaskCanceledException>(async () => await forwardTask);
 
         // assert

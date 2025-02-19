@@ -4,10 +4,10 @@ using q2q.Models;
 
 namespace q2q;
 
-public class MessageRelay(IAmazonSQS? sqsClient = null, q2qOptions? options = null)
+public class MessageRelay(IAmazonSQS? sqsClient = null, MessageRelayOptions? options = null)
 {
     private readonly IAmazonSQS _sqsClient = sqsClient ?? new AmazonSQSClient();
-    private readonly q2qOptions _options = options ?? new q2qOptions();
+    private readonly MessageRelayOptions _options = options ?? new MessageRelayOptions();
 
     private readonly HashSet<string> _sourceQueueMessageIds = [];
 

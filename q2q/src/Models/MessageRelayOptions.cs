@@ -2,7 +2,7 @@
 
 namespace q2q.Models;
 
-public class q2qOptions
+public class MessageRelayOptions
 {
     private int _maxNumberOfMessages = 10;
     private int _waitTimeSeconds = 10;

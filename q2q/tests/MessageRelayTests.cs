@@ -8,12 +8,12 @@ namespace q2q.Tests;
 public class MessageRelayTests
 {
     private readonly Mock<IAmazonSQS> _sqsClientMock;
-    private readonly Mock<q2qOptions> _options;
+    private readonly Mock<MessageRelayOptions> _options;
 
     public MessageRelayTests()
     {
         _sqsClientMock = new Mock<IAmazonSQS>();
-        _options = new Mock<q2qOptions>();
+        _options = new Mock<MessageRelayOptions>();
     }
 
     //[Fact]

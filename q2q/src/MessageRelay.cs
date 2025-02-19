@@ -4,12 +4,18 @@ using q2q.Models;
 
 namespace q2q;
 
-public class MessageRelay(IAmazonSQS? sqsClient = null, MessageRelayOptions? options = null)
+public class MessageRelay
 {
-    private readonly IAmazonSQS _sqsClient = sqsClient ?? new AmazonSQSClient();
-    private readonly MessageRelayOptions _options = options ?? new MessageRelayOptions();
+    private readonly IAmazonSQS _sqsClient;
+    private readonly MessageRelayOptions _options;
 
-    private readonly HashSet<string> _sourceQueueMessageIds = [];
+    private readonly HashSet<string> _sourceQueueMessageIds = new();
+
+    public MessageRelay(IAmazonSQS? sqsClient = null, MessageRelayOptions? options = null)
+    {
+        _sqsClient = sqsClient ?? new AmazonSQSClient();
+        _options = options ?? new MessageRelayOptions();
+    }
 
     public async Task ForwardMessages(string sourceQueueUrl, string destinationQueueUrl, CancellationToken cancellationToken)
     {
@@ -35,8 +41,8 @@ public class MessageRelay(IAmazonSQS? sqsClient = null, MessageRelayOptions? opt
             QueueUrl = sourceQueueUrl,
             MaxNumberOfMessages = _options.MaxNumberOfMessages,
             WaitTimeSeconds = _options.WaitTimeSeconds,
-            MessageSystemAttributeNames = ["All"],
-            MessageAttributeNames = ["All"]
+            MessageSystemAttributeNames = new() { "All" },
+            MessageAttributeNames = new() { "All" }
         };
 
         try
@@ -47,7 +53,7 @@ public class MessageRelay(IAmazonSQS? sqsClient = null, MessageRelayOptions? opt
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error retrieving messages from source queue: {ex.Message}");
-            return [];
+            return Enumerable.Empty<Message>();
         }
     }
 

@@ -30,7 +30,9 @@ public class MessageRelay
                 continue;
             }
 
-            var messagesSent = await SendMessageBatches(newMessages, destinationQueueUrl, cancellationToken);
+            var messagesSent = await SendMessages(newMessages, destinationQueueUrl, cancellationToken);
+
+            await DeleteMessagesFromSource(messagesSent, sourceQueueUrl, cancellationToken);
         }
     }
 
@@ -57,7 +59,7 @@ public class MessageRelay
         }
     }
 
-    private async Task<IEnumerable<Message>> SendMessageBatches(IEnumerable<Message> messages, string destinationQueueUrl, CancellationToken cancellationToken)
+    private async Task<IEnumerable<Message>> SendMessages(IEnumerable<Message> messages, string destinationQueueUrl, CancellationToken cancellationToken)
     {
         var batches = messages
             .Select((message, index) => new { message, index })
@@ -65,24 +67,23 @@ public class MessageRelay
 
         foreach (var batch in batches)
         {
-            var batchEntries = batch.Select(message => new SendMessageBatchRequestEntry
+            var sendEntries = batch.Select(message => new SendMessageBatchRequestEntry
             {
                 Id = message.MessageId, // !
                 MessageBody = message.Body,
                 MessageAttributes = message.MessageAttributes
             });
 
-            var batchRequest = new SendMessageBatchRequest
+            var sendRequest = new SendMessageBatchRequest
             {
                 QueueUrl = destinationQueueUrl,
-                Entries = batchEntries.ToList()
+                Entries = sendEntries.ToList()
             };
 
             try
             {
-                var response = await _sqsClient.SendMessageBatchAsync(batchRequest, cancellationToken);
-
-                HandleSendMessageBatchResponse(response);
+                var sendResponse = await _sqsClient.SendMessageBatchAsync(sendRequest, cancellationToken);
+                HandleResponse(sendResponse);
 
                 return messages.Where(msg => _sourceQueueMessageIds.Contains(msg.MessageId));
             }
@@ -93,16 +94,55 @@ public class MessageRelay
         }
 
         return Enumerable.Empty<Message>();
+
+        void HandleResponse(SendMessageBatchResponse response)
+        {
+            response
+                .Failed
+                .ForEach(failed => Console.Error.WriteLine($"Failed to send message w/ id {failed.Id}: {failed.Message}"));
+
+            response
+                .Successful
+                .ForEach(successful => _sourceQueueMessageIds.Add(successful.Id));
+        }
     }
 
-    private void HandleSendMessageBatchResponse(SendMessageBatchResponse response)
+    private async Task DeleteMessagesFromSource(IEnumerable<Message> messages, string sourceQueueUrl, CancellationToken cancellationToken)
     {
-        response
-            .Failed
-            .ForEach(failed => Console.Error.WriteLine($"Failed to send message w/ id {failed.Id}: {failed.Message}"));
+        var batches = messages
+            .Select((message, index) => new { message, index })
+            .GroupBy(x => x.index / 10, x => x.message);
 
-        response
-            .Successful
-            .ForEach(successful => _sourceQueueMessageIds.Add(successful.Id));
+        foreach (var batch in batches)
+        {
+            var deleteEntries = batch.Select(msg => new DeleteMessageBatchRequestEntry
+            {
+                Id = msg.MessageId,
+                ReceiptHandle = msg.ReceiptHandle
+            });
+
+            var deleteRequest = new DeleteMessageBatchRequest
+            {
+                QueueUrl = sourceQueueUrl,
+                Entries = deleteEntries.ToList()
+            };
+
+            try
+            {
+                var deleteResponse = await _sqsClient.DeleteMessageBatchAsync(deleteRequest, cancellationToken);
+                HandleResponse(deleteResponse);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error deleting message batch: {ex.Message}");
+            }
+        }
+
+        static void HandleResponse(DeleteMessageBatchResponse response)
+        {
+            response
+                .Failed
+                .ForEach(failed => Console.Error.WriteLine($"Failed to delete message w/ id {failed.Id}: {failed.Message}"));
+        }
     }
 }

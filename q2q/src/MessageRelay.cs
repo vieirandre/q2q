@@ -61,6 +61,8 @@ public class MessageRelay
 
     private async Task<IEnumerable<Message>> SendMessages(IEnumerable<Message> messages, string destinationQueueUrl, CancellationToken cancellationToken)
     {
+        var messagesSent = new List<Message>();
+
         var batches = messages
             .Select((message, index) => new { message, index })
             .GroupBy(x => x.index / _options.BatchSize, x => x.message);
@@ -85,7 +87,7 @@ public class MessageRelay
                 var sendResponse = await _sqsClient.SendMessageBatchAsync(sendRequest, cancellationToken);
                 HandleResponse(sendResponse);
 
-                return messages.Where(msg => _sourceQueueMessageIds.Contains(msg.MessageId));
+                messagesSent.AddRange(messages.Where(msg => _sourceQueueMessageIds.Contains(msg.MessageId)));
             }
             catch (Exception ex)
             {
@@ -93,7 +95,7 @@ public class MessageRelay
             }
         }
 
-        return Enumerable.Empty<Message>();
+        return messagesSent;
 
         void HandleResponse(SendMessageBatchResponse response)
         {

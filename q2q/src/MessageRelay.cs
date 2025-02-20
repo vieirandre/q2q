@@ -1,6 +1,6 @@
 ﻿using Amazon.SQS;
 using Amazon.SQS.Model;
-using q2q.Models;
+using q2q.Options;
 
 namespace q2q;
 

@@ -1,6 +1,6 @@
 ﻿using q2q.Helpers;
 
-namespace q2q.Models;
+namespace q2q.Options;
 
 public class MessageRelayOptions
 {

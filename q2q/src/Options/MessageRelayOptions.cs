@@ -6,7 +6,8 @@ public class MessageRelayOptions
 {
     private int _maxNumberOfMessages = 10;
     private int _waitTimeSeconds = 10;
-    private int _batchSize = 10;
+    private int _sendMessageBatchSize = 10;
+    private int _deleteMessageBatchSize = 10;
 
     public int MaxNumberOfMessages
     {
@@ -22,9 +23,15 @@ public class MessageRelayOptions
 
     public int PollingDelayMilliseconds { get; set; } = 1000;
 
-    public int BatchSize
+    public int SendMessageBatchSize
     {
-        get => _batchSize;
-        set => _batchSize = Guards.EnsureInRange(value, nameof(BatchSize), 1, 10);
+        get => _sendMessageBatchSize;
+        set => _sendMessageBatchSize = Guards.EnsureInRange(value, nameof(SendMessageBatchSize), 1, 10);
+    }
+
+    public int DeleteMessageBatchSize
+    {
+        get => _deleteMessageBatchSize;
+        set => _deleteMessageBatchSize = Guards.EnsureInRange(value, nameof(DeleteMessageBatchSize), 1, 10);
     }
 }

@@ -30,7 +30,7 @@ public class MessageRelay
                 continue;
             }
 
-            await SendMessageBatches(newMessages, destinationQueueUrl, cancellationToken);
+            var messagesSent = await SendMessageBatches(newMessages, destinationQueueUrl, cancellationToken);
         }
     }
 
@@ -57,7 +57,7 @@ public class MessageRelay
         }
     }
 
-    private async Task SendMessageBatches(IEnumerable<Message> messages, string destinationQueueUrl, CancellationToken cancellationToken)
+    private async Task<IEnumerable<Message>> SendMessageBatches(IEnumerable<Message> messages, string destinationQueueUrl, CancellationToken cancellationToken)
     {
         var batches = messages
             .Select((message, index) => new { message, index })
@@ -83,12 +83,16 @@ public class MessageRelay
                 var response = await _sqsClient.SendMessageBatchAsync(batchRequest, cancellationToken);
 
                 HandleSendMessageBatchResponse(response);
+
+                return messages.Where(msg => _sourceQueueMessageIds.Contains(msg.MessageId));
             }
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"Error sending message batch: {ex.Message}");
             }
         }
+
+        return Enumerable.Empty<Message>();
     }
 
     private void HandleSendMessageBatchResponse(SendMessageBatchResponse response)

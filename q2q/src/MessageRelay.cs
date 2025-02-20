@@ -82,18 +82,23 @@ public class MessageRelay
             {
                 var response = await _sqsClient.SendMessageBatchAsync(batchRequest, cancellationToken);
 
-                response
-                    .Failed
-                    .ForEach(failed => Console.Error.WriteLine($"Failed to send message w/ id {failed.Id}: {failed.Message}"));
-
-                response
-                    .Successful
-                    .ForEach(successful => _sourceQueueMessageIds.Add(successful.Id));
+                HandleSendMessageBatchResponse(response);
             }
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"Error sending message batch: {ex.Message}");
             }
         }
+    }
+
+    private void HandleSendMessageBatchResponse(SendMessageBatchResponse response)
+    {
+        response
+            .Failed
+            .ForEach(failed => Console.Error.WriteLine($"Failed to send message w/ id {failed.Id}: {failed.Message}"));
+
+        response
+            .Successful
+            .ForEach(successful => _sourceQueueMessageIds.Add(successful.Id));
     }
 }

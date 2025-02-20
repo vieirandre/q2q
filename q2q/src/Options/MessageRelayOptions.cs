@@ -29,6 +29,8 @@ public class MessageRelayOptions
         set => _sendMessageBatchSize = Guards.EnsureInRange(value, nameof(SendMessageBatchSize), 1, 10);
     }
 
+    public bool DeleteMessagesFromSource { get; set; }
+
     public int DeleteMessageBatchSize
     {
         get => _deleteMessageBatchSize;

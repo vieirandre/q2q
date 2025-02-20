@@ -32,7 +32,8 @@ public class MessageRelay
 
             var messagesSent = await SendMessages(newMessages, destinationQueueUrl, cancellationToken);
 
-            await DeleteMessagesFromSource(messagesSent, sourceQueueUrl, cancellationToken);
+            if (_options.DeleteMessagesFromSource)
+                await DeleteMessagesFromSource(messagesSent, sourceQueueUrl, cancellationToken);
         }
     }
 

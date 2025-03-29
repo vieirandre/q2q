@@ -88,7 +88,8 @@ public class MessageRelay
                 var sendResponse = await _sqsClient.SendMessageBatchAsync(sendRequest, cancellationToken);
                 HandleResponse(sendResponse);
 
-                messagesSent.AddRange(messages.Where(msg => _sourceQueueMessageIds.Contains(msg.MessageId)));
+                var successfulIds = sendResponse.Successful.Select(s => s.Id).ToHashSet();
+                messagesSent.AddRange(batch.Where(msg => successfulIds.Contains(msg.MessageId)));
             }
             catch (Exception ex)
             {

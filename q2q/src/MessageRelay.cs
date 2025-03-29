@@ -1,5 +1,7 @@
 ﻿using Amazon.SQS;
 using Amazon.SQS.Model;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using q2q.Options;
 
 namespace q2q;
@@ -8,13 +10,15 @@ public class MessageRelay
 {
     private readonly IAmazonSQS _sqsClient;
     private readonly MessageRelayOptions _options;
+    private readonly ILogger _logger;
 
     private readonly HashSet<string> _sourceQueueMessageIds = new();
 
-    public MessageRelay(IAmazonSQS? sqsClient = null, MessageRelayOptions? options = null)
+    public MessageRelay(IAmazonSQS? sqsClient = null, MessageRelayOptions? options = null, ILogger? logger = null)
     {
         _sqsClient = sqsClient ?? new AmazonSQSClient();
         _options = options ?? new MessageRelayOptions();
+        _logger = logger ?? NullLogger<MessageRelay>.Instance;
     }
 
     public async Task ForwardMessages(string sourceQueueUrl, string destinationQueueUrl, CancellationToken cancellationToken)
@@ -55,7 +59,7 @@ public class MessageRelay
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Error retrieving messages from source queue: {ex.Message}");
+            _logger.LogError("Error retrieving messages from source queue: {Exception}", ex);
             return Enumerable.Empty<Message>();
         }
     }
@@ -93,7 +97,7 @@ public class MessageRelay
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Error sending message batch: {ex.Message}");
+                _logger.LogError("Error sending message batch: {Exception}", ex);
             }
         }
 
@@ -103,7 +107,7 @@ public class MessageRelay
         {
             response
                 .Failed
-                .ForEach(failed => Console.Error.WriteLine($"Failed to send message w/ id {failed.Id}: {failed.Message}"));
+                .ForEach(failed => _logger.LogError("Failed to send message w/ id {Id}: {Message}", failed.Id, failed.Message));
 
             response
                 .Successful
@@ -138,15 +142,15 @@ public class MessageRelay
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Error deleting message batch: {ex.Message}");
+                _logger.LogError("Error deleting message batch: {Exception}", ex);
             }
         }
 
-        static void HandleResponse(DeleteMessageBatchResponse response)
+        void HandleResponse(DeleteMessageBatchResponse response)
         {
             response
                 .Failed
-                .ForEach(failed => Console.Error.WriteLine($"Failed to delete message w/ id {failed.Id}: {failed.Message}"));
+                .ForEach(failed => _logger.LogError("Failed to delete message w/ id {Id}: {Message}", failed.Id, failed.Message));
         }
     }
 }

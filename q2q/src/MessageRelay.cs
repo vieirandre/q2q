@@ -59,7 +59,7 @@ public class MessageRelay
         }
         catch (Exception ex)
         {
-            _logger.LogError("Error retrieving messages from source queue: {Exception}", ex);
+            _logger.LogError(ex, "Error retrieving messages from source queue");
             return Enumerable.Empty<Message>();
         }
     }
@@ -97,7 +97,7 @@ public class MessageRelay
             }
             catch (Exception ex)
             {
-                _logger.LogError("Error sending message batch: {Exception}", ex);
+                _logger.LogError(ex, "Error sending message batch");
             }
         }
 
@@ -142,7 +142,7 @@ public class MessageRelay
             }
             catch (Exception ex)
             {
-                _logger.LogError("Error deleting message batch: {Exception}", ex);
+                _logger.LogError(ex, "Error deleting message batch");
             }
         }
 

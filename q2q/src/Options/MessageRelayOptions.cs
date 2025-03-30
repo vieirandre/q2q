@@ -21,7 +21,7 @@ public class MessageRelayOptions
         set => _waitTimeSeconds = Guards.EnsureInRange(value, nameof(WaitTimeSeconds), 0, 20);
     }
 
-    public int PollingDelayMilliseconds { get; set; } = 1000;
+    public int PollingDelayMilliseconds { get; set; } = 10000;
 
     public int SendMessageBatchSize
     {

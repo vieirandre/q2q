@@ -74,11 +74,25 @@ public class MessageRelay
 
         foreach (var batch in batches)
         {
-            var sendEntries = batch.Select(message => new SendMessageBatchRequestEntry
+            var sendEntries = batch.Select(message =>
             {
-                Id = message.MessageId, // !
-                MessageBody = message.Body,
-                MessageAttributes = message.MessageAttributes
+                var attributes = new Dictionary<string, MessageAttributeValue>(message.MessageAttributes);
+                
+                foreach (var systemAttr in message.Attributes)
+                {
+                    attributes[$"OriginalSystemAttribute.{systemAttr.Key}"] = new MessageAttributeValue
+                    {
+                        DataType = "String",
+                        StringValue = systemAttr.Value
+                    };
+                }
+
+                return new SendMessageBatchRequestEntry
+                {
+                    Id = message.MessageId, // !
+                    MessageBody = message.Body,
+                    MessageAttributes = attributes
+                };
             });
 
             var sendRequest = new SendMessageBatchRequest

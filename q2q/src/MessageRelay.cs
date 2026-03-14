@@ -77,7 +77,7 @@ public class MessageRelay
             var sendEntries = batch.Select(message =>
             {
                 var attributes = new Dictionary<string, MessageAttributeValue>(message.MessageAttributes);
-                
+
                 foreach (var systemAttr in message.Attributes)
                 {
                     attributes[$"OriginalSystemAttribute.{systemAttr.Key}"] = new MessageAttributeValue

@@ -104,7 +104,7 @@ public class MessageRelay
             try
             {
                 var sendResponse = await _sqsClient.SendMessageBatchAsync(sendRequest, cancellationToken);
-                HandleResponse(sendResponse);
+                LogResponse(sendResponse);
 
                 var successfulIds = sendResponse.Successful.Select(s => s.Id).ToHashSet();
                 messagesSent.AddRange(batch.Where(msg => successfulIds.Contains(msg.MessageId)));
@@ -117,15 +117,11 @@ public class MessageRelay
 
         return messagesSent;
 
-        void HandleResponse(SendMessageBatchResponse response)
+        void LogResponse(SendMessageBatchResponse response)
         {
             response
                 .Failed
                 .ForEach(failed => _logger.LogError("Failed to send message w/ id {Id}: {Message}", failed.Id, failed.Message));
-
-            response
-                .Successful
-                .ForEach(successful => _sourceQueueMessageIds.Add(successful.Id));
         }
     }
 
@@ -165,6 +161,10 @@ public class MessageRelay
             response
                 .Failed
                 .ForEach(failed => _logger.LogError("Failed to delete message w/ id {Id}: {Message}", failed.Id, failed.Message));
+
+            response
+                .Successful
+                .ForEach(successful => _sourceQueueMessageIds.Add(successful.Id));
         }
     }
 }

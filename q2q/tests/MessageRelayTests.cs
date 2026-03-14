@@ -219,7 +219,10 @@ public class MessageRelayTests
 
     private static SendMessageBatchResponse CreateSuccessfulSendResponse(SendMessageBatchRequest request, CancellationToken token)
     {
-        var response = new SendMessageBatchResponse();
+        var response = new SendMessageBatchResponse
+        {
+            Successful = []
+        };
 
         foreach (var entry in request.Entries)
         {
@@ -234,7 +237,10 @@ public class MessageRelayTests
 
     private static DeleteMessageBatchResponse CreateSuccessfulDeleteResponse(DeleteMessageBatchRequest request, CancellationToken token)
     {
-        var response = new DeleteMessageBatchResponse();
+        var response = new DeleteMessageBatchResponse
+        {
+            Successful = []
+        };
 
         foreach (var entry in request.Entries)
         {

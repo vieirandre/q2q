@@ -55,7 +55,7 @@ public class MessageRelay
         try
         {
             var response = await _sqsClient.ReceiveMessageAsync(receiveRequest, cancellationToken);
-            return response.Messages;
+            return response.Messages ?? Enumerable.Empty<Message>();
         }
         catch (Exception ex)
         {
@@ -76,9 +76,10 @@ public class MessageRelay
         {
             var sendEntries = batch.Select(message =>
             {
-                var attributes = new Dictionary<string, MessageAttributeValue>(message.MessageAttributes);
+                var attributes = new Dictionary<string, MessageAttributeValue>(
+                    message.MessageAttributes ?? new Dictionary<string, MessageAttributeValue>());
 
-                foreach (var systemAttr in message.Attributes)
+                foreach (var systemAttr in message.Attributes ?? new Dictionary<string, string>())
                 {
                     attributes[$"OriginalSystemAttribute.{systemAttr.Key}"] = new MessageAttributeValue
                     {
@@ -106,7 +107,9 @@ public class MessageRelay
                 var sendResponse = await _sqsClient.SendMessageBatchAsync(sendRequest, cancellationToken);
                 LogResponse(sendResponse);
 
-                var successfulIds = sendResponse.Successful.Select(s => s.Id).ToHashSet();
+                var successfulIds = (sendResponse.Successful ?? Enumerable.Empty<SendMessageBatchResultEntry>())
+                    .Select(s => s.Id)
+                    .ToHashSet();
                 messagesSent.AddRange(batch.Where(msg => successfulIds.Contains(msg.MessageId)));
             }
             catch (Exception ex)
@@ -119,9 +122,10 @@ public class MessageRelay
 
         void LogResponse(SendMessageBatchResponse response)
         {
-            response
-                .Failed
-                .ForEach(failed => _logger.LogError("Failed to send message w/ id {Id}: {Message}", failed.Id, failed.Message));
+            foreach (var failed in response.Failed ?? Enumerable.Empty<BatchResultErrorEntry>())
+            {
+                _logger.LogError("Failed to send message w/ id {Id}: {Message}", failed.Id, failed.Message);
+            }
         }
     }
 
@@ -158,13 +162,15 @@ public class MessageRelay
 
         void HandleResponse(DeleteMessageBatchResponse response)
         {
-            response
-                .Failed
-                .ForEach(failed => _logger.LogError("Failed to delete message w/ id {Id}: {Message}", failed.Id, failed.Message));
+            foreach (var failed in response.Failed ?? Enumerable.Empty<BatchResultErrorEntry>())
+            {
+                _logger.LogError("Failed to delete message w/ id {Id}: {Message}", failed.Id, failed.Message);
+            }
 
-            response
-                .Successful
-                .ForEach(successful => _sourceQueueMessageIds.Add(successful.Id));
+            foreach (var successful in response.Successful ?? Enumerable.Empty<DeleteMessageBatchResultEntry>())
+            {
+                _sourceQueueMessageIds.Add(successful.Id);
+            }
         }
     }
 }

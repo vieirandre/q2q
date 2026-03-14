@@ -14,9 +14,9 @@ public class MessageRelay
 
     private readonly HashSet<string> _sourceQueueMessageIds = new();
 
-    public MessageRelay(IAmazonSQS? sqsClient = null, MessageRelayOptions? options = null, ILogger? logger = null)
+    public MessageRelay(IAmazonSQS sqsClient, MessageRelayOptions? options = null, ILogger? logger = null)
     {
-        _sqsClient = sqsClient ?? new AmazonSQSClient();
+        _sqsClient = sqsClient ?? throw new ArgumentNullException(nameof(sqsClient));
         _options = options ?? new MessageRelayOptions();
         _logger = logger ?? NullLogger<MessageRelay>.Instance;
     }

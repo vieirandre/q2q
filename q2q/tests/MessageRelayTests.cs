@@ -15,6 +15,12 @@ public class MessageRelayTests
     }
 
     [Fact]
+    public void Constructor_GivenNullSqsClient_ShouldThrowArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() => new MessageRelay(null!));
+    }
+
+    [Fact]
     public async Task ForwardMessages_GivenSingleMessageInSourceQueue_ShouldForwardMessage()
     {
         // arrange

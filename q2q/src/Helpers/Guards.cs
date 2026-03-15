@@ -1,6 +1,6 @@
 ﻿namespace q2q.Helpers;
 
-public static class Guards
+internal static class Guards
 {
     public static int EnsureInRange(int value, string parameterName, int min, int max)
     {
